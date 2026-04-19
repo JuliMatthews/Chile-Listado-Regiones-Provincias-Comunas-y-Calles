@@ -109,6 +109,29 @@ Calle Principal
 
 ---
 
+## Cómo usar en tu proyecto
+
+### 1. Descarga
+Copia el repositorio o descarga el ZIP.
+
+### 2. Copia los archivos
+Copia la carpeta `menu-condicional/` a tu proyecto.
+
+### 3. Usa en tu código
+
+**Opción A - Usar el demo:**
+```php
+<?php include 'menu-condicional/menu-condicional.php'; ?>
+```
+
+**Opción B - Integrar el HTML:**
+Copia el contenido de `demo.html` en tu formulario.
+
+### 4. Listo
+Funciona en local (XAMPP, Laragon, etc.) y producción.
+
+---
+
 ## Contribuir
 
 ¿Faltan calles o hay errores? 
