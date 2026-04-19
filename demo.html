@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú Condicional</title>
+    <style>
+        .menu-condicional { font-family: Arial, sans-serif; max-width: 100%; }
+        .menu-condicional .form-group { margin-bottom: 15px; }
+        .menu-condicional label { display: block; margin-bottom: 5px; font-weight: bold; color: #555; }
+        .menu-condicional select, .menu-condicional input { 
+            width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; background: #fff; 
+        }
+        .menu-condicional select:disabled, .menu-condicional input:disabled { background: #f5f5f5; color: #999; }
+    </style>
+</head>
+<body>
+    <div class="menu-condicional">
+        <h2>Ubicación</h2>
+        
+        <div class="form-group">
+            <label for="region">Región</label>
+            <select id="region">
+                <option value="">Cargando...</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="provincia">Provincia</label>
+            <select id="provincia" disabled>
+                <option value="">Seleccione Provincia</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="comuna">Comuna</label>
+            <select id="comuna" disabled>
+                <option value="">Seleccione Comuna</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="calle">Calle / Avenida</label>
+            <input type="text" id="calle" list="calles-list" placeholder="Seleccione o escriba una calle" disabled>
+            <datalist id="calles-list"></datalist>
+        </div>
+    </div>
+
+    <script>
+        const apiUrl = 'menu-condicional.php?action=';
+        const region = document.getElementById('region');
+        const provincia = document.getElementById('provincia');
+        const comuna = document.getElementById('comuna');
+        const calle = document.getElementById('calle');
+        const callesList = document.getElementById('calles-list');
+
+        async function fetchOptions(url) {
+            try {
+                const response = await fetch(url);
+                return await response.json();
+            } catch (e) {
+                console.error('Error:', e);
+                return [];
+            }
+        }
+
+        function populateSelect(select, options, placeholder) {
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                select.appendChild(option);
+            });
+        }
+
+        function populateDatalist(datalist, options) {
+            datalist.innerHTML = '';
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                datalist.appendChild(option);
+            });
+        }
+
+        async function loadRegiones() {
+            const opciones = await fetchOptions(apiUrl + 'regiones');
+            populateSelect(region, opciones, 'Seleccione Región');
+        }
+
+        async function loadProvincias() {
+            const valorRegion = region.value;
+            if (!valorRegion) {
+                resetSelect(provincia, 'Seleccione Provincia');
+                resetSelect(comuna, 'Seleccione Comuna');
+                resetInput(calle, 'Seleccione Calle');
+                return;
+            }
+            
+            const opciones = await fetchOptions(apiUrl + 'provincias&region=' + encodeURIComponent(valorRegion));
+            populateSelect(provincia, opciones, 'Seleccione Provincia');
+            provincia.disabled = false;
+            resetSelect(comuna, 'Seleccione Comuna');
+            resetInput(calle, 'Seleccione Calle');
+        }
+
+        async function loadComunas() {
+            const valorRegion = region.value;
+            const valorProvincia = provincia.value;
+            if (!valorProvincia) {
+                resetSelect(comuna, 'Seleccione Comuna');
+                resetInput(calle, 'Seleccione Calle');
+                return;
+            }
+            
+            const opciones = await fetchOptions(apiUrl + 'comunas&region=' + encodeURIComponent(valorRegion) + '&provincia=' + encodeURIComponent(valorProvincia));
+            populateSelect(comuna, opciones, 'Seleccione Comuna');
+            comuna.disabled = false;
+            resetInput(calle, 'Seleccione Calle');
+        }
+
+        async function loadCalles() {
+            const valorRegion = region.value;
+            const valorProvincia = provincia.value;
+            const valorComuna = comuna.value;
+            if (!valorComuna) {
+                resetInput(calle, 'Seleccione Calle');
+                return;
+            }
+            
+            const opciones = await fetchOptions(apiUrl + 'calles&region=' + encodeURIComponent(valorRegion) + '&provincia=' + encodeURIComponent(valorProvincia) + '&comuna=' + encodeURIComponent(valorComuna));
+            populateDatalist(callesList, opciones);
+            calle.disabled = false;
+            calle.placeholder = 'Seleccione o escriba una calle';
+        }
+
+        function resetSelect(select, placeholder) {
+            select.innerHTML = `<option value="">${placeholder}</option>`;
+            select.disabled = true;
+        }
+
+        function resetInput(input, placeholder) {
+            input.value = '';
+            input.placeholder = placeholder;
+            input.disabled = true;
+        }
+
+        region.addEventListener('change', loadProvincias);
+        provincia.addEventListener('change', loadComunas);
+        comuna.addEventListener('change', loadCalles);
+
+        loadRegiones();
+    </script>
+</body>
+</html>
